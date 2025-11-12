@@ -16,9 +16,10 @@ const uploadOnCloundinary = async( LocalFIlePath ) => {
         })
         // File has been uploaded succefully
         console.log('File uploded on clodinary', response.url);
+        fs.unlinkSync(LocalFIlePath)
         return response;
     }catch(error){
-        fs.unlink(LocalFIlePath)
+        fs.unlinkSync(LocalFIlePath)
         // remove saved  tempory file as the upload operation got failed
         return null;
     }

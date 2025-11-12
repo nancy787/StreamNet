@@ -5,10 +5,13 @@ import {uploadOnCloundinary} from "../utils/cloudinary.js";
 import { APIResponse } from "../utils/APIResponse.js";
 
 const registerUser = asyncHandler( async (req, res) => {
-   const {FullName, email, username, password} = req.body
+   console.log("BODY =>", req.body);
+console.log("FILES =>", req.files);
+
+   const {name, fullName, email, username, password} = req.body
    console.log(req.body);
    
-   if( [ FullName, email, username, password ].some( (field)  =>  
+   if( [ name, fullName, email, username, password ].some( (field)  =>  
       field?.trim() === " ") 
       ) 
       {
@@ -22,10 +25,15 @@ const registerUser = asyncHandler( async (req, res) => {
       if(existedUser) {
          throw new APIError(400, 'username or email already exists')
       }
-
+      console.log(req.files);
+      
       const avatarLocalPath = req.files?.avatar[0]?.path;
-      const coverImagelocalPath = req.files?.coverImage[0]?.path;
+      // const coverImagelocalPath = req.files?.coverImage[0]?.path;
 
+      let coverImagelocalPath
+      if(req.files && Array.isArray( req.files.coverImage) && req.files.coverImage.length > 0 ){
+         coverImagelocalPath = req.files.coverImage[0].path;
+      }
       if(!avatarLocalPath) {
          throw new APIError(400, 'avatar image is not found')
       }
@@ -33,23 +41,24 @@ const registerUser = asyncHandler( async (req, res) => {
 
 
       const avatarImg    =  await uploadOnCloundinary(avatarLocalPath)
-      const coverImg = await uploadOnCloundinary(coverImagelocalPath)
+      const coverImg     = await uploadOnCloundinary(coverImagelocalPath)
       
       if(!avatarImg) {
          throw new APIError(400, 'image not added on serev')
       }
 
       const user = await User.create( {
-         FullName, 
+         name,
+         fullName, 
          avatar : avatarImg.url,
          coverImage : coverImg?.url || '',
          email,
          password,
-         username : username.toLowerCase
+         username: username.toLowerCase()
          })
 
          console.log(user);
-         const getUser = await User.findById(user.__id).select(
+         const getUser = await User.findById(user._id).select(
             "-password -refreshToken", 
          )
 
